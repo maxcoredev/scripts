@@ -74,7 +74,7 @@ def create(request, template_name=None, client_type=None, object_type=None, obje
     config = get_config(template_name)
 
     # IV. Конструируем page, breadcrumbs и area
-    page = CodexPage(user=request.user, title=config['title'], navigation=construct_mainnav())
+    page = Page(user=request.user, title=config['title'], navigation=construct_mainnav())
 
     page.add_breadcrumb('Документы', reverse('gui:dashboard'))
     if client:
@@ -88,7 +88,7 @@ def create(request, template_name=None, client_type=None, object_type=None, obje
 
     if object_type == 'task':
         # Если есть задача - добавляем кнопки для перехода в задачу и документ
-        controls = zone.add_controls(name='controls', data=CodexControl())
+        controls = zone.add_controls(name='controls', data=Control())
         controls.add_btn(title='Открыть документ', color='primary',
                          url=reverse('gui:docgen:open_task', args=[object_id]), target='_blank')
         controls.add_btn(title='Перейти к задаче', color='primary',
@@ -96,7 +96,7 @@ def create(request, template_name=None, client_type=None, object_type=None, obje
 
     # V. Создаём форму и конструируем поля
 
-    form = zone.add_form(name='form', data=CodexForm(name='create', css_class='needs-validation',
+    form = zone.add_form(name='form', data=Form(name='create', css_class='needs-validation',
                                                      novalidate=True, action=form_action))
     form.add_button(title=button_text, status='primary', submit=True)
 
