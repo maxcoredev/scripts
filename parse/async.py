@@ -5,17 +5,15 @@ import asyncio
 
 url = 'https://amp-api.apps.apple.com/v1/catalog/ru/apps/1065803457/reviews'
 
-payload = {
-    'l': 'ru',
-    'offset': 10,
-    'platform': 'web',
-    'additionalPlatforms': 'appletv,ipad,iphone,mac'
-}
-
 
 async def fetch(session, offset):
 
-    payload['offset'] = offset
+    payload = {
+        'l': 'ru',
+        'offset': offset,
+        'platform': 'web',
+        'additionalPlatforms': 'appletv,ipad,iphone,mac'
+    }
 
     async with session.get(url, params=payload) as response:
 
