@@ -7,13 +7,15 @@ url = 'https://amp-api.apps.apple.com/v1/catalog/ru/apps/1065803457/reviews'
 
 payload = {
     'l': 'ru',
-    'offset': offset,
+    'offset': 10,
     'platform': 'web',
     'additionalPlatforms': 'appletv,ipad,iphone,mac'
 }
 
 
 async def fetch(session, offset):
+
+    payload['offset'] = offset
 
     async with session.get(url, params=payload) as response:
 
