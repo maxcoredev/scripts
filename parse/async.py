@@ -48,6 +48,8 @@ def get_total_pages_count():
 
 
 async def main():
+    """Функция реализует асинхронные запросы ко всем страницам с отзывами,
+       сохраняет значения (предположительно, в базу)"""
 
     token = 'eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IldlYlBsYXlLaWQifQ.eyJpc3MiOiJBTVBXZWJQbGF5IiwiaWF0IjoxNTc5NjM3MzI0LCJleHAiOjE1OTUxODkzMjR9.SCgFvMtDJmpfGBYGjJ9ss9aloYssX7HYq0eI-xyQssNruaVLI_wXLWPDUtigBXDQrwVCPariPfcvOLvEn067lg'
     headers = {'Authorization': 'Bearer ' + token}
