@@ -1,25 +1,64 @@
 import time
-import aiohttp
 import asyncio
+import aiohttp
+import requests
 
+
+token = 'eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IldlYlBsYXlLaWQifQ.eyJpc3MiOiJBTVBXZWJQbGF5IiwiaWF0IjoxNTc5NjM3MzI0LCJleHAiOjE1OTUxODkzMjR9.SCgFvMtDJmpfGBYGjJ9ss9aloYssX7HYq0eI-xyQssNruaVLI_wXLWPDUtigBXDQrwVCPariPfcvOLvEn067lg'
+
+headers = {'Authorization': 'Bearer ' + token}
 
 url = 'https://amp-api.apps.apple.com/v1/catalog/ru/apps/1065803457/reviews'
+
+payload = {
+    'l': 'ru',
+    'offset': None,
+    'platform': 'web',
+    'additionalPlatforms': 'appletv,ipad,iphone,mac'
+}
+
+
+def get_last_offset():
+    """Поиск последнего значения "offset" (можно понимать, как номер последней страницы)"""
+
+    min_page = 1
+    max_page = 10000
+    cur_page = max_page
+    multiplier = 10
+
+    def search_last_offset():
+
+        nonlocal min_page, max_page, cur_page
+
+        payload['offset'] = cur_page * multiplier
+
+        result = requests.get(url, params=payload, headers=headers)
+
+        if not result:
+            max_page = cur_page
+        else:
+            min_page = cur_page
+
+        cur_page = min_page + int((max_page - min_page) / 2)
+
+        if min_page != cur_page:
+            return search_last_offset()
+        else:
+            return cur_page * multiplier
+
+    return search_last_offset()
 
 
 async def fetch(session, offset):
 
-    payload = {
-        'l': 'ru',
-        'offset': offset,
-        'platform': 'web',
-        'additionalPlatforms': 'appletv,ipad,iphone,mac'
-    }
+    payload['offset'] = offset
 
     async with session.get(url, params=payload) as response:
 
         data = await response.json()
 
         for review in data['data']:
+
             attributes = review['attributes']
 
             # Записываем содержимое attributes в базу
@@ -33,40 +72,14 @@ async def fetch(session, offset):
             
             if attributes.get('developerResponse'):
                 print(attributes.get('developerResponse')['modified'])
-
-
-def get_total_pages_count():
-    """Функция, запрашивает
-       https://amp-api.apps.apple.com/v1/catalog/ru/apps/1065803457/reviews
-       с параметром offset, равным, к примеру 100000,
-       и, методом бинарного поиска, ищет страницу,
-       у которой в ответе нет параметра "next"
-
-       Эта страница и является последней. Возвращаем её номер
-       """
-
-    # Функция не реализована, значение 5210 установлено опытным путём
-
-    return 5210
+                print(attributes.get('developerResponse')['body'])
 
 
 async def main():
-    """Функция реализует асинхронные запросы ко всем страницам с отзывами,
-       сохраняет значения (предположительно, в базу)"""
-
-    token = 'eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IldlYlBsYXlLaWQifQ.eyJpc3MiOiJBTVBXZWJQbGF5IiwiaWF0IjoxNTc5NjM3MzI0LCJleHAiOjE1OTUxODkzMjR9.SCgFvMtDJmpfGBYGjJ9ss9aloYssX7HYq0eI-xyQssNruaVLI_wXLWPDUtigBXDQrwVCPariPfcvOLvEn067lg'
-    headers = {'Authorization': 'Bearer ' + token}
-
-    total_pages_count = get_total_pages_count()
-    offsets = range(0, total_pages_count + 10, 10)
-    
-    tasks = []
-
     async with aiohttp.ClientSession(headers=headers) as session:
-        for offset in offsets:
-            task = asyncio.create_task(fetch(session, offset))
-            tasks.append(task)
-        await asyncio.gather(*tasks)
+        offsets = range(0, get_last_offset() + 10, 10)
+        awaitables = [fetch(session, offset) for offset in offsets]
+        await asyncio.gather(*awaitables)
 
 
 if __name__ == '__main__':
